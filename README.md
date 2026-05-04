@@ -24,36 +24,7 @@ Feito para rodar em **Docker** junto com Jellyfin, Sonarr, Radarr e toda a stack
 
 ## 📸 Screenshots
 
-```
-Tela 1 — Selecionar pasta      Tela 2 — Configurar APIs
-┌─────────────────────────┐    ┌─────────────────────────┐
-│  🎸 ConcertArr          │    │  🎸 ConcertArr          │
-│                         │    │                         │
-│  Onde estão seus shows? │    │  Chaves de API          │
-│  ┌───────────────────┐  │    │  TMDb API Key           │
-│  │ /mnt/media/shows  │  │    │  ┌───────────────────┐  │
-│  └───────────────────┘  │    │  │ ****************  │  │
-│  [📁 Procurar]          │    │  └───────────────────┘  │
-│                         │    │  Discogs Token          │
-│           [Próximo →]   │    │  ┌───────────────────┐  │
-└─────────────────────────┘    │  │ ****************  │  │
-                               └─────────────────────────┘
 
-Tela 3 — Buscando             Tela 4 — Resultado
-┌─────────────────────────┐    ┌─────────────────────────┐
-│  Buscando capas...      │    │  Concluído!             │
-│  AC/DC - Live (1992)    │    │  60 shows processados   │
-│  ████████████░░  75%    │    │  ┌────┬────┬────┐       │
-│                         │    │  │ 39 │ 19 │  2 │       │
-│  ✅ AC/DC       TMDb    │    │  │TMDb│Disc│N/A │       │
-│  ✅ Adele       TMDb    │    │  └────┴────┴────┘       │
-│  ✅ Jorge&Mat   Discogs │    │                         │
-│  ⚠️  Um Bazinho  N/A    │    │  [⚡ Busca manual]      │
-│                         │    │  [✎ Alterar capa]       │
-└─────────────────────────┘    └─────────────────────────┘
-```
-
----
 
 ## 🚀 Instalação
 
