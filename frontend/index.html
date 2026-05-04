@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConcertArr</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — File Browser
+  ════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="modal-filebrowser" onclick="closeFileBrowser(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">📁 Selecionar pasta</span>
+        <button class="modal-close" onclick="closeFileBrowser()">✕</button>
+      </div>
+      <div class="modal-path" id="fb-path">/</div>
+      <div class="modal-list" id="fb-list">
+        <div class="fb-loading">Carregando...</div>
+      </div>
+      <div class="modal-footer">
+        <span class="fb-selected-label" id="fb-selected-label">Nenhuma pasta selecionada</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="closeFileBrowser()">Cancelar</button>
+          <button class="btn-primary" id="fb-confirm" onclick="confirmFolder()" disabled>Selecionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       APP
+  ════════════════════════════════════════════ -->
+  <div class="app">
+    <header class="header">
+      <div class="logo">C</div>
+      <div class="header-text">
+        <span class="logo-name">ConcertArr</span>
+        <span class="logo-sub">artwork fetcher para shows e concertos</span>
+      </div>
+    </header>
+
+    <!-- TELA 1 — Pasta -->
+    <section class="screen active" id="screen-folder">
+      <div class="steps">
+        <div class="step active">1 Pasta</div>
+        <div class="step-line"></div>
+        <div class="step">2 APIs</div>
+        <div class="step-line"></div>
+        <div class="step">3 Buscar</div>
+        <div class="step-line"></div>
+        <div class="step">4 Resultado</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Onde estão seus shows?</h2>
+        <p class="card-sub">Informe a pasta com os arquivos de vídeo dos concertos</p>
+
+        <label class="field-label">Caminho da pasta</label>
+        <div class="field-row">
+          <input type="text" id="input-folder" placeholder="/mnt/homelab/media/shows" />
+          <button class="btn-browse" onclick="openFileBrowser()">📁 Procurar</button>
+        </div>
+        <p class="hint">Formatos: .mkv, .mp4, .avi, .m4v — arquivos .iso são ignorados</p>
+
+        <label class="field-label" style="margin-top:1.25rem">Subpastas</label>
+        <div class="radio-row">
+          <label class="radio-label">
+            <input type="radio" name="subfolders" value="yes" checked /> Incluir subpastas
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="subfolders" value="no" /> Só a pasta raiz
+          </label>
+        </div>
+
+        <div class="nav">
+          <span></span>
+          <button class="btn-primary" onclick="goToAPIs()">Próximo →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 2 — APIs -->
+    <section class="screen" id="screen-apis">
+      <div class="steps">
+        <div class="step done">✓ Pasta</div>
+        <div class="step-line"></div>
+        <div class="step active">2 APIs</div>
+        <div class="step-line"></div>
+        <div class="step">3 Buscar</div>
+        <div class="step-line"></div>
+        <div class="step">4 Resultado</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Chaves de API</h2>
+        <p class="card-sub">Necessárias para buscar capas nas bases de dados</p>
+
+        <label class="field-label">
+          TMDb API Key
+          <a href="https://www.themoviedb.org/settings/api" target="_blank" class="link-hint">— como obter?</a>
+        </label>
+        <input type="password" id="input-tmdb" placeholder="Cole sua TMDb API Key aqui" />
+        <p class="hint">The Movie Database — ótimo para shows internacionais</p>
+
+        <label class="field-label" style="margin-top:1.25rem">
+          Discogs Token
+          <a href="https://www.discogs.com/settings/developers" target="_blank" class="link-hint">— como obter?</a>
+        </label>
+        <input type="password" id="input-discogs" placeholder="Cole seu Discogs Token aqui" />
+        <p class="hint">Discogs — excelente para artistas brasileiros e DVDs raros</p>
+
+        <div class="nav">
+          <button class="btn-secondary" onclick="showScreen('screen-folder')">← Voltar</button>
+          <button class="btn-primary" onclick="startScan()">Iniciar busca →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 3 — Buscando -->
+    <section class="screen" id="screen-scanning">
+      <div class="steps">
+        <div class="step done">✓ Pasta</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ APIs</div>
+        <div class="step-line"></div>
+        <div class="step active">3 Buscando...</div>
+        <div class="step-line"></div>
+        <div class="step">4 Resultado</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Buscando capas...</h2>
+        <p class="card-sub" id="scan-current-name">Iniciando...</p>
+        <div class="progress-bar">
+          <div class="progress-fill" id="scan-progress" style="width:0%"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="scan-count">0 de 0</span>
+          <span id="scan-percent">0%</span>
+        </div>
+        <div class="result-list" id="scan-results"></div>
+        <button class="btn-primary full hidden" id="btn-ver-resultado" onclick="showResult()">
+          Ver resultado →
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 4 — Resultado -->
+    <section class="screen" id="screen-result">
+      <div class="steps">
+        <div class="step done">✓ Pasta</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ APIs</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ Busca</div>
+        <div class="step-line"></div>
+        <div class="step active">4 Resultado</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Concluído!</h2>
+        <p class="card-sub" id="result-total">0 shows processados</p>
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div class="stat-number" id="stat-tmdb">0</div>
+            <div class="stat-label">via TMDb</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-number" id="stat-discogs">0</div>
+            <div class="stat-label">via Discogs</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-number" id="stat-notfound">0</div>
+            <div class="stat-label">não encontrados</div>
+          </div>
+        </div>
+
+        <div class="menu-card hidden" id="menu-manual" onclick="showScreen('screen-manual')">
+          <div class="menu-icon warn">⚡</div>
+          <div class="menu-info">
+            <div class="menu-title">Busca manual dos que faltaram</div>
+            <div class="menu-sub">Cole um link do Discogs para cada show</div>
+          </div>
+          <span class="badge-warn" id="badge-notfound">0</span>
+        </div>
+
+        <div class="menu-card" onclick="goToMosaic()">
+          <div class="menu-icon">✎</div>
+          <div class="menu-info">
+            <div class="menu-title">Alterar capa de qualquer show</div>
+            <div class="menu-sub">Selecione no mosaico e cole o link do Discogs</div>
+          </div>
+        </div>
+
+        <div class="menu-card" onclick="showScreen('screen-folder')">
+          <div class="menu-icon">↺</div>
+          <div class="menu-info">
+            <div class="menu-title">Rodar novamente</div>
+            <div class="menu-sub">Buscar capas de shows adicionados recentemente</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 5 — Busca manual -->
+    <section class="screen" id="screen-manual">
+      <div class="steps">
+        <div class="step done">✓ Pasta</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ APIs</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ Busca</div>
+        <div class="step-line"></div>
+        <div class="step active">Manual</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Busca manual</h2>
+        <p class="card-sub">Cole o link do Discogs para cada show abaixo</p>
+        <div id="manual-list"></div>
+        <div class="nav">
+          <button class="btn-secondary" onclick="showScreen('screen-result')">← Voltar</button>
+          <button class="btn-primary" onclick="showScreen('screen-result')">Concluir →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 6 — Mosaico -->
+    <section class="screen" id="screen-mosaic">
+      <div class="steps">
+        <div class="step done">✓ Pasta</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ APIs</div>
+        <div class="step-line"></div>
+        <div class="step done">✓ Busca</div>
+        <div class="step-line"></div>
+        <div class="step active">Alterar</div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Alterar capa</h2>
+        <p class="card-sub">Selecione o show e cole o link do Discogs</p>
+
+        <input type="text" id="mosaic-search" placeholder="Buscar show..." oninput="filterMosaic()" />
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="setMosaicFilter('all', this)">Todos</button>
+          <button class="filter-btn" onclick="setMosaicFilter('missing', this)">Sem capa</button>
+          <button class="filter-btn" onclick="setMosaicFilter('ok', this)">Com capa</button>
+        </div>
+
+        <div class="mosaic-grid" id="mosaic-grid"></div>
+
+        <div class="selected-panel hidden" id="selected-panel">
+          <div class="selected-thumb" id="selected-thumb">🎬</div>
+          <div class="selected-info">
+            <div class="selected-name" id="selected-name">—</div>
+            <div class="url-row">
+              <input type="text" id="selected-url" placeholder="https://www.discogs.com/release/..." />
+              <button class="btn-fetch" onclick="manualFetch()">Baixar</button>
+            </div>
+            <p class="hint">Cole o link do release ou master no Discogs</p>
+          </div>
+        </div>
+
+        <div class="nav">
+          <button class="btn-secondary" onclick="showScreen('screen-result')">← Voltar</button>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- .app -->
+  <script src="app.js"></script>
+</body>
+</html>
